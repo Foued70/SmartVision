@@ -3,6 +3,7 @@
 #include "window.h"
 #include "configurator.h"
 #include <thread>
+#include "faceDetectionModule.h"
 using namespace SmartVision ;
 
 string filePath ;
@@ -35,11 +36,18 @@ int main(int argc, char** argv)
 	}
 	configure(argv[1]);
 	acquisitionModule acq(method , cameraId, filePath);	
-	window w("AquisitionModule") ;
+	//window w("AcquisitionModule") ;
+	faceDetectionModule faces("/home/ziedom/Desktop/SmartVision/faceDetection/haarcascade_frontalface_default.xml");
 	// the object acq will be converted to observable (polymorphism) 
-	observerDelegator<Mat,window> deleg(acq,w);
-	thread t(&acquisitionModule::acquire,&acq) ;
+	//observerDelegator<Mat,window> deleg(acq,w);
+	window z("FaceDetectionModule") ;
+	observerDelegator<Mat,faceDetectionModule> deleg1(acq,faces);
+	observerDelegator<tuple<Mat,Mat,vector<Rect_<int> > >,window> deleg2(faces,z);	
+	
+	thread t1(&acquisitionModule::acquire,&acq) ;
+	thread t2(&faceDetectionModule::detectFaces,&faces) ;
 	// wait for the "t" thread to terminate before terminating the main thread
-	t.join();
+	t1.join();
+	t2.join();
     return 0;
 }
